@@ -111,9 +111,17 @@ def deserialize_bytes_tensor(encoded_tensor):
     strs = list()
     offset = 0
     val_buf = encoded_tensor
-    while offset < len(val_buf):
+    val_buf_size = len(val_buf)
+    while offset < val_buf_size:
+        if offset + 4 > val_buf_size:
+            raise ValueError("Invalid bytes tensor data: incomplete length field")
+
         l = struct.unpack_from("<I", val_buf, offset)[0]
         offset += 4
+
+        if offset + l > val_buf_size:
+            raise ValueError("Invalid bytes tensor data: string extends beyond buffer")
+
         sb = struct.unpack_from("<{}s".format(l), val_buf, offset)[0]
         offset += l
         strs.append(sb)
